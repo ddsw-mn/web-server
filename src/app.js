@@ -1,10 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 
-const userRoutes = require('./routes/userRoutes');
+const userRoutes = require('./routes/user.router');
 
-const { errorHandler } = require('./middlewares/errorHandler');
-const { notFoundHandler } = require('./middlewares/notFound');
+const { errorHandler } = require('./middlewares/error.handler.middleware');
+const { pageNotFoundHandler } = require('./middlewares/page.not.found.middleware');
 
 const app = express();
 
@@ -14,6 +14,6 @@ app.use(cors());
 app.use(userRoutes);
 
 app.use(errorHandler);
-app.use(notFoundHandler);
+app.use(pageNotFoundHandler);
 
 module.exports = app;
