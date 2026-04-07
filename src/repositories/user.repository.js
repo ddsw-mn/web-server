@@ -1,65 +1,70 @@
+const fs = require('fs');
 
 class UserRepository {
 
   constructor() {
-    this.nextId = 1;
-
-    this.users = [];
-
-    this.createUser({ code: '123.123-1', name: 'Fede Scarpa', mail: 'fscarpa@frba.utn.edu.ar' });
-    this.createUser({ code: '456.456-2', name: 'Leo Cesario', mail: 'lcesario@frba.utn.edu.ar' });
+    this.users = [
+      { "id": 1, "code": "123.123-1", "name": "Fede Scarpa", "mail": "fscarpa@frba.utn.edu.ar" },
+      { "id": 2, "code": "456.456-2", "name": "Leo Cesario", "mail": "lcesario@frba.utn.edu.ar" }
+    ];
+    this.nextId = 3;
   }
   
-  getAllUsers() {
-    return this.users;
-  }
-
-  getUserByCode(code) {
-    return this.users.find(function(user) {
-      return user.code === code;
+  getAllUsers(callback) {
+    asincronico(() => {
+      callback(null, this.users);
     });
   }
 
-  createUser(payload) {
-    const newUser = {
-      id: this.nextId++,
-      code: payload.code,
-      name: payload.name,
-      mail: payload.mail
-    };
-
-    this.users.push(newUser);
-    return newUser;
-  }
-
-  updateUserByCode(code, payload) {
-    const userIndex = this.users.findIndex(function(user) {
-      return user.code === code;
+  getUserByCode(code, callback) {
+    asincronico(() => {
+      callback(null, this.users.find(user => user.code === code));
     });
-
-    if (userIndex === -1) {
-      return null;
-    }
-
-    if (payload.name) {
-      this.users[userIndex].name = payload.name;
-    }
-
-    if (payload.mail) {
-      this.users[userIndex].mail = payload.mail;
-    }
-
-    return this.users[userIndex];
   }
 
-  deleteUserByCode(code) {
-    const userIndex = this.users.findIndex(user => user.code === code);
+  createUser(payload, callback) {
+    asincronico(() => {
+      const newUser = {
+        id: this.nextId++,
+        code: payload.code,
+        name: payload.name,
+        mail: payload.mail
+      };
+      this.users.push(newUser);
+      callback(null, newUser);
+    });
+  }
 
-    if (userIndex === -1) {
-      return null;
-    }
+  updateUserByCode(code, payload, callback) {
+    asincronico(() => {
+      const userIndex = this.users.findIndex(user => user.code === code);
 
-    return this.users.splice(userIndex, 1)[0];
+      if (userIndex === -1) {
+        callback(null, null);
+      } else {
+        if (payload.name) {
+          this.users[userIndex].name = payload.name;
+        }
+
+        if (payload.mail) {
+          this.users[userIndex].mail = payload.mail;
+        }
+
+        callback(null, this.users[userIndex]);
+      }
+    });
+  }
+
+  deleteUserByCode(code, callback) {
+    asincronico(() => {
+      const userIndex = this.users.findIndex(user => user.code === code);
+
+      if (userIndex === -1) {
+        callback(null, null);
+      } else {
+        callback(null, this.users.splice(userIndex, 1)[0]);
+      }
+    });
   }
 
   static instance() {
@@ -67,6 +72,10 @@ class UserRepository {
 
     return this._instance;
   }
+}
+
+function asincronico(callback) {
+  setTimeout(callback, 500);
 }
 
 module.exports = UserRepository;
