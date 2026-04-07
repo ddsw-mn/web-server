@@ -2,6 +2,8 @@ const { UserError } = require("../errors/user.errors");
 
 function errorHandler(error, _req, res, next) {
   
+  console.error(error);
+
   if (error instanceof SyntaxError && 'body' in error) {
     return res.status(400).json({
       message: 'Error al parsear JSON',

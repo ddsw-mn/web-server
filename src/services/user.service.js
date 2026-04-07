@@ -9,62 +9,43 @@ class UserService {
     this.userRepository = userRepository;
   }
 
-  getUsers(callback) {
-    this.userRepository.getAllUsers(callback);
+  getUsers() {
+    return this.userRepository.getAllUsers();
   }
 
-  getUserByCode(code, callback) {
-    this.userRepository.getUserByCode(code, (err, user) => {
-      if (err) {
-        callback(err, null);
-      } else {
-        this.validateUserExists(code, user, callback);
-      }
-    });
+  getUserByCode(code) {
+    return this.userRepository.getUserByCode(code)
+      .then(user => this.validateUserExists(code, user));
   }
 
-  createUser(payload, callback) {
+  createUser(payload) {
     if (!payload.name || !payload.mail || !payload.code) {
-      callback(new UserMissingFieldsError(payload), null);
-    } else {
-      this.userRepository.getUserByCode(payload.code, (err, user) => {
-        if (err) {
-          callback(err, null);
-        } else if (user) {
-          callback(new UserAlreadyExistsError(payload.code), null);
-        } else {
-          this.userRepository.createUser(payload, callback);
-        }
-      });
-    }
+      return Promise.reject(new UserMissingFieldsError(payload));
+    } 
+    
+    return this.userRepository.getUserByCode(payload.code)
+      .then(user => {
+        return user ?
+          Promise.reject(new UserAlreadyExistsError(payload.code)) :
+          this.userRepository.createUser(payload);
+      })
+      .then(user => user.id);
   }
 
-  updateUserByCode(code, payload, callback) {
-    this.userRepository.updateUserByCode(code, payload || {}, (err, user) => {
-      if (err) {
-        callback(err, null);
-      } else {
-        this.validateUserExists(code, user, callback);
-      }
-    });
+  updateUserByCode(code, payload) {
+    return this.userRepository.updateUserByCode(code, payload || {})
+      .then(user => this.validateUserExists(code, user));
   }
 
-  deleteUserByCode(code, callback) {
-    this.userRepository.deleteUserByCode(code, (err, user) => {
-      if (err) {
-        callback(err, null);
-      } else {
-        this.validateUserExists(code, user, callback);
-      }
-    });
+  deleteUserByCode(code) {
+    return this.userRepository.deleteUserByCode(code)
+      .then(user => this.validateUserExists(code, user));
   }
 
-  validateUserExists(code, user, callback) {
-    if (!user) {
-      callback(new UserNotFoundError(code), null);
-    } else {
-      callback(null, user);
-    }
+  validateUserExists(code, user) {
+    return !user ?
+      Promise.reject(new UserNotFoundError(code)) :
+      Promise.resolve(user);
   }
 
   static instance() {
