@@ -9,37 +9,62 @@ class UserService {
     this.userRepository = userRepository;
   }
 
-  getUsers() {
-    return this.userRepository.getAllUsers();
+  getUsers(callback) {
+    this.userRepository.getAllUsers(callback);
   }
 
-  getUserByCode(code) {
-    return this.validateUserExists(code, this.userRepository.getUserByCode(code));
+  getUserByCode(code, callback) {
+    this.userRepository.getUserByCode(code, (err, user) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        this.validateUserExists(code, user, callback);
+      }
+    });
   }
 
-  createUser(payload) {
+  createUser(payload, callback) {
     if (!payload.name || !payload.mail || !payload.code) {
-      throw new UserMissingFieldsError(payload);
+      callback(new UserMissingFieldsError(payload), null);
+    } else {
+      this.userRepository.getUserByCode(payload.code, (err, user) => {
+        if (err) {
+          callback(err, null);
+        } else if (user) {
+          callback(new UserAlreadyExistsError(payload.code), null);
+        } else {
+          this.userRepository.createUser(payload, callback);
+        }
+      });
     }
-    if (this.userRepository.getUserByCode(payload.code)) {
-      throw new UserAlreadyExistsError(payload.code);
-    }
-    return this.userRepository.createUser(payload);
   }
 
-  updateUserByCode(code, payload) {
-    return this.validateUserExists(code, this.userRepository.updateUserByCode(code, payload || {}));
+  updateUserByCode(code, payload, callback) {
+    this.userRepository.updateUserByCode(code, payload || {}, (err, user) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        this.validateUserExists(code, user, callback);
+      }
+    });
   }
 
-  deleteUserByCode(code) {
-    return this.validateUserExists(code, this.userRepository.deleteUserByCode(code));
+  deleteUserByCode(code, callback) {
+    this.userRepository.deleteUserByCode(code, (err, user) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        this.validateUserExists(code, user, callback);
+      }
+    });
   }
 
-  validateUserExists(code, user) {
+  validateUserExists(code, user, callback) {
     if (!user) {
-      throw new UserNotFoundError(code);
+      callback(new UserNotFoundError(code), null);
+    } else {
+      callback(null, user);
     }
-    return user;
   }
 
   static instance() {

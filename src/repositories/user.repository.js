@@ -1,65 +1,119 @@
+const fs = require('fs');
+
+const encoding = 'utf-8';
+const filename = 'data/users.json';
 
 class UserRepository {
 
   constructor() {
-    this.nextId = 1;
-
-    this.users = [];
-
-    this.createUser({ code: '123.123-1', name: 'Fede Scarpa', mail: 'fscarpa@frba.utn.edu.ar' });
-    this.createUser({ code: '456.456-2', name: 'Leo Cesario', mail: 'lcesario@frba.utn.edu.ar' });
+    this.getAllUsers((err, users) => {
+      if (err) {
+        console.error('Error al inicializar el repositorio de usuarios:', err);
+        this.nextId = 1;
+      } else {
+        this.nextId = users.reduce((maxId, user) => Math.max(maxId, user.id), 0) + 1;
+      }
+    });
   }
   
-  getAllUsers() {
-    return this.users;
-  }
-
-  getUserByCode(code) {
-    return this.users.find(function(user) {
-      return user.code === code;
+  getAllUsers(callback) {
+    fs.readFile(filename, { encoding }, (err, data) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        callback(null, JSON.parse(data || '[]'));
+      }
     });
   }
 
-  createUser(payload) {
-    const newUser = {
-      id: this.nextId++,
-      code: payload.code,
-      name: payload.name,
-      mail: payload.mail
-    };
-
-    this.users.push(newUser);
-    return newUser;
-  }
-
-  updateUserByCode(code, payload) {
-    const userIndex = this.users.findIndex(function(user) {
-      return user.code === code;
+  getUserByCode(code, callback) {
+    this.getAllUsers((err, users) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        callback(null, users.find(user => user.code === code));
+      }
     });
-
-    if (userIndex === -1) {
-      return null;
-    }
-
-    if (payload.name) {
-      this.users[userIndex].name = payload.name;
-    }
-
-    if (payload.mail) {
-      this.users[userIndex].mail = payload.mail;
-    }
-
-    return this.users[userIndex];
   }
 
-  deleteUserByCode(code) {
-    const userIndex = this.users.findIndex(user => user.code === code);
+  createUser(payload, callback) {
+    this.getAllUsers((err, users) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        const newUser = {
+          id: this.nextId++,
+          code: payload.code,
+          name: payload.name,
+          mail: payload.mail
+        };
+        users.push(newUser);
+        this.saveUsers(users, (err) => {
+          if (err) {
+            callback(err, null);
+          } else {
+            callback(null, newUser);
+          }
+        });
+      }
+    });
+  }
 
-    if (userIndex === -1) {
-      return null;
-    }
+  updateUserByCode(code, payload, callback) {
+    this.getAllUsers((err, users) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        const userIndex = users.findIndex(user => user.code === code);
 
-    return this.users.splice(userIndex, 1)[0];
+        if (userIndex === -1) {
+          callback(null, null);
+        } else {
+          if (payload.name) {
+            users[userIndex].name = payload.name;
+          }
+
+          if (payload.mail) {
+            users[userIndex].mail = payload.mail;
+          }
+
+          this.saveUsers(users, (err, data) => callback(err, users[userIndex]));
+        }
+      }
+    });
+  }
+
+  deleteUserByCode(code, callback) {
+    this.getAllUsers((err, users) => {
+      if (err) {
+        callback(err, null);
+      } else {
+        const userIndex = users.findIndex(user => user.code === code);
+
+        if (userIndex === -1) {
+          callback(null, null);
+        } else {
+          const deletedUser = users.splice(userIndex, 1)[0];
+          this.saveUsers(users, (err) => {
+            if (err) {
+              callback(err, null);
+            } else {
+              callback(null, deletedUser);
+            }
+          });
+        }
+      }
+    });
+  }
+
+  saveUsers(users = [], callback = () => {}) {
+    fs.writeFile(filename, JSON.stringify(users, null, 2), { encoding }, (err) => {
+      if (err) {
+        callback(err);
+      } else {
+        callback(null, users);
+      }
+    });
   }
 
   static instance() {

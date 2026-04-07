@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "code": "123.123-1",
+    "name": "Fede Scarpa",
+    "mail": "fscarpa@frba.utn.edu.ar"
+  },
+  {
+    "id": 2,
+    "code": "456.456-2",
+    "name": "Leo Cesario",
+    "mail": "lcesario@frba.utn.edu.ar"
+  }
+]
