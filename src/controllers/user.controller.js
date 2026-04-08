@@ -8,54 +8,34 @@ class UserController {
     this.userService = userService;
   }
 
-  getUsers(req, res, next) {
-    this.userService.getUsers((err, users) => {
-      if (err) {
-        next(err);
-      } else {
-        res.status(200).json(users);
-      }
-    });
+  getUsers(req, res) {
+    return this.userService
+      .getUsers()
+      .then(users => res.status(200).json(users));
   }
   
-  getUserByCode(req, res, next) {
-    this.userService.getUserByCode(req.params.code, (err, user) => {
-      if (err) {
-        next(err);
-      } else {
-        res.status(200).json(user);
-      }
-    });
+  getUserByCode(req, res) {
+    return this.userService
+      .getUserByCode(req.params.code)
+      .then(user => res.status(200).json(user));
   }
   
-  createUser(req, res, next) {
-    this.userService.createUser(req.body, (err, user) => {
-      if (err) {
-        next(err);
-      } else {
-        res.status(201).json(user);
-      }
-    });
+  createUser(req, res) {
+    return this.userService
+      .createUser(req.body)
+      .then(user => res.status(201).json(user));
   }
   
-  updateUserByCode(req, res, next) {
-    this.userService.updateUserByCode(req.params.code, req.body, (err, user) => {
-      if (err) {
-        next(err);
-      } else {
-        res.status(200).json(user);
-      }
-    });
+  updateUserByCode(req, res) {
+    return this.userService
+      .updateUserByCode(req.params.code, req.body)
+      .then(user => res.status(200).json(user));
   }
   
-  deleteUserByCode(req, res, next) {
-    this.userService.deleteUserByCode(req.params.code, (err, user) => {
-      if (err) {
-        next(err);
-      } else {
-        res.status(200).json(user);
-      }
-    });
+  deleteUserByCode(req, res) {
+    return this.userService
+      .deleteUserByCode(req.params.code)
+      .then(user => res.status(200).json(user));
   }
   
   static instance() {

@@ -5,13 +5,13 @@ const userController = UserController.instance();
 
 const router = express.Router();
 
-router.route('/users')
-  .get((req, res, next) => userController.getUsers(req, res, next))
-  .post((req, res, next) => userController.createUser(req, res, next));
+router.route('/')
+  .get((req, res) => userController.getUsers(req, res))
+  .post((req, res) => userController.createUser(req, res));
 
-router.route('/users/:code')
-  .get((req, res, next) => userController.getUserByCode(req, res, next))
-  .put((req, res, next) => userController.updateUserByCode(req, res, next))
-  .delete((req, res, next) => userController.deleteUserByCode(req, res, next));
+router.route('/:code')
+  .get((req, res) => userController.getUserByCode(req, res))
+  .put((req, res) => userController.updateUserByCode(req, res))
+  .delete((req, res) => userController.deleteUserByCode(req, res));
 
 module.exports = router;

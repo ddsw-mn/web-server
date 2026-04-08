@@ -10,60 +10,70 @@ class UserRepository {
     this.nextId = 3;
   }
   
-  getAllUsers(callback) {
-    asincronico(() => {
-      callback(null, this.users);
+  getAllUsers() {
+    return new Promise((resolve, reject) => {
+      asincronico(() => {
+        resolve(this.users);
+      });
+    })
+  }
+
+  getUserByCode(code) {
+    return new Promise((resolve, reject) => {
+      asincronico(() => {
+        resolve(this.users.find(user => user.code === code));
+      });
     });
   }
 
-  getUserByCode(code, callback) {
-    asincronico(() => {
-      callback(null, this.users.find(user => user.code === code));
+  createUser(payload) {
+    return new Promise((resolve, reject) => {
+      asincronico(() => {
+        const newUser = {
+          id: this.nextId++,
+          code: payload.code,
+          name: payload.name,
+          mail: payload.mail
+        };
+        this.users.push(newUser);
+        resolve(newUser);
+      });
     });
   }
 
-  createUser(payload, callback) {
-    asincronico(() => {
-      const newUser = {
-        id: this.nextId++,
-        code: payload.code,
-        name: payload.name,
-        mail: payload.mail
-      };
-      this.users.push(newUser);
-      callback(null, newUser);
-    });
-  }
+  updateUserByCode(code, payload) {
+    return new Promise((resolve, reject) => {
+      asincronico(() => {
+        const userIndex = this.users.findIndex(user => user.code === code);
 
-  updateUserByCode(code, payload, callback) {
-    asincronico(() => {
-      const userIndex = this.users.findIndex(user => user.code === code);
+        if (userIndex === -1) {
+          resolve(null);
+        } else {
+          if (payload.name) {
+            this.users[userIndex].name = payload.name;
+          }
 
-      if (userIndex === -1) {
-        callback(null, null);
-      } else {
-        if (payload.name) {
-          this.users[userIndex].name = payload.name;
+          if (payload.mail) {
+            this.users[userIndex].mail = payload.mail;
+          }
+
+          resolve(this.users[userIndex]);
         }
-
-        if (payload.mail) {
-          this.users[userIndex].mail = payload.mail;
-        }
-
-        callback(null, this.users[userIndex]);
-      }
+      });
     });
   }
 
-  deleteUserByCode(code, callback) {
-    asincronico(() => {
-      const userIndex = this.users.findIndex(user => user.code === code);
+  deleteUserByCode(code) {
+    return new Promise((resolve, reject) => {
+      asincronico(() => {
+        const userIndex = this.users.findIndex(user => user.code === code);
 
-      if (userIndex === -1) {
-        callback(null, null);
-      } else {
-        callback(null, this.users.splice(userIndex, 1)[0]);
-      }
+        if (userIndex === -1) {
+          resolve(null);
+        } else {
+          resolve(this.users.splice(userIndex, 1)[0]);
+        }
+      });
     });
   }
 
