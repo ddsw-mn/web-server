@@ -14,25 +14,31 @@ class UserService {
   }
 
   getUserByCode(code) {
-    return this.validateUserExists(code, this.userRepository.getUserByCode(code));
+    return this.userRepository.getUserByCode(code)
+      .then(user => this.validateUserExists(code, user));
   }
 
   createUser(payload) {
     if (!payload.name || !payload.mail || !payload.code) {
-      throw new UserMissingFieldsError(payload);
+      return Promise.reject(new UserMissingFieldsError(payload));
     }
-    if (this.userRepository.getUserByCode(payload.code)) {
-      throw new UserAlreadyExistsError(payload.code);
-    }
-    return this.userRepository.createUser(payload);
+    return this.userRepository.getUserByCode(payload.code)
+      .then(user => {
+        if (user) {
+          throw new UserAlreadyExistsError(payload.code);
+        }
+        return this.userRepository.createUser(payload);
+      });
   }
 
   updateUserByCode(code, payload) {
-    return this.validateUserExists(code, this.userRepository.updateUserByCode(code, payload || {}));
+    return this.userRepository.updateUserByCode(code, payload)
+      .then(user => this.validateUserExists(code, user));
   }
 
   deleteUserByCode(code) {
-    return this.validateUserExists(code, this.userRepository.deleteUserByCode(code));
+    return this.userRepository.deleteUserByCode(code)
+      .then(user => this.validateUserExists(code, user));
   }
 
   validateUserExists(code, user) {
